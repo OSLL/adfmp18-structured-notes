@@ -29,6 +29,11 @@ android {
         setSourceCompatibility(JavaVersion.VERSION_1_8)
         setTargetCompatibility(JavaVersion.VERSION_1_8)
     }
+    sourceSets {
+        for (piece in listOf("main", "test", "androidTest")) {
+            getByName(piece).java.srcDirs("src/$piece/kotlin")
+        }
+    }
 }
 
 dependencies {
