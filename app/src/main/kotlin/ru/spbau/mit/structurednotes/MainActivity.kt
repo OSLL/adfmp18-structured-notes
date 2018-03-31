@@ -36,7 +36,15 @@ class MainActivity : AppCompatActivity() {
             override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
                 val from = viewHolder.adapterPosition
                 val to  = target.adapterPosition
-                Collections.swap(cards, from, to)
+                if (from < to) {
+                    for (i in from until to) {
+                        Collections.swap(cards, i, i + 1)
+                    }
+                } else {
+                    for (i in from downTo to + 1) {
+                        Collections.swap(cards, i, i - 1)
+                    }
+                }
                 recyclerView.adapter.notifyItemMoved(from, to)
                 return true
             }
