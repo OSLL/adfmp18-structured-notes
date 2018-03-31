@@ -1,4 +1,4 @@
-package ru.spbau.mit.structurednotes
+package ru.spbau.mit.structurednotes.ui
 
 import android.os.Bundle
 import android.support.design.widget.Snackbar
@@ -12,13 +12,15 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_card.view.*
+import ru.spbau.mit.structurednotes.R
+import ru.spbau.mit.structurednotes.data.CardType
 
 import ru.spbau.mit.structurednotes.utils.inflate
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
-    private val cards: MutableList<String> = mutableListOf()
+    private val cards: MutableList<CardType> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,7 +58,8 @@ class MainActivity : AppCompatActivity() {
         card_view.adapter = RecyclerAdapter()
 
         fab.setOnClickListener { view ->
-            cards.add((cards.size + 1).toString())
+            val id = (cards.size + 1).toString()
+            cards.add(CardType(id, "", "", "CardType #$id"))
             card_view.adapter.notifyItemInserted(cards.lastIndex)
         }
     }
@@ -87,17 +90,22 @@ class MainActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: Holder, position: Int) = holder.bindTo(cards[position])
 
         private inner class Holder(private val view: View) : RecyclerView.ViewHolder(view) {
+            private lateinit var data: CardType
 
             init {
                 view.setOnClickListener {
-                    Snackbar
-                            .make(it, "Hella there!", Snackbar.LENGTH_LONG)
+                    Snackbar.make(it, "Pressed New on ${data.name}", Snackbar.LENGTH_LONG)
                             .show()
+                }
+                view.list_layout.setOnClickListener {
+                    Snackbar.make(it, "Pressed List on ${data.name}", Snackbar.LENGTH_LONG)
+                            .show();
                 }
             }
 
-            fun bindTo(data: String) {
-                view.name.text = data
+            fun bindTo(data: CardType) {
+                this.data = data
+                view.name.text = data.name
             }
         }
     }
