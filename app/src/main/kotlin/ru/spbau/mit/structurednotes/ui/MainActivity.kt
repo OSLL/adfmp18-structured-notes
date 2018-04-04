@@ -1,7 +1,8 @@
 package ru.spbau.mit.structurednotes.ui
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -13,13 +14,20 @@ import android.view.ViewGroup
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_card.view.*
 import ru.spbau.mit.structurednotes.R
-import ru.spbau.mit.structurednotes.data.CardType
-
+import ru.spbau.mit.structurednotes.data.*
+import ru.spbau.mit.structurednotes.ui.constructor.ConstructorActivity
+import ru.spbau.mit.structurednotes.ui.list.ListActivity
+import ru.spbau.mit.structurednotes.ui.note.NoteActivity
 import ru.spbau.mit.structurednotes.utils.inflate
 import java.util.*
+import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
 
+    private val CONSTRUCTOR_CARD_TYPE = 1
+    private val NOTE_TYPE = 2
+
+    private val DB: MutableMap<CardType, MutableList<CardData>> = mutableMapOf()
     private val cards: MutableList<CardType> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,10 +65,9 @@ class MainActivity : AppCompatActivity() {
         card_view.layoutManager = GridLayoutManager(this, 2)
         card_view.adapter = RecyclerAdapter()
 
-        fab.setOnClickListener { view ->
-            val id = (cards.size + 1).toString()
-            cards.add(CardType(id, "", "", "CardType #$id"))
-            card_view.adapter.notifyItemInserted(cards.lastIndex)
+        fab.setOnClickListener {
+            val intent = Intent(this, ConstructorActivity::class.java)
+            startActivityForResult(intent, CONSTRUCTOR_CARD_TYPE)
         }
     }
 
@@ -85,27 +92,57 @@ class MainActivity : AppCompatActivity() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
                 Holder(parent.inflate(R.layout.activity_main_card))
 
-        override fun getItemCount() = cards.size
+        override fun getItemCount() = DB.size
 
         override fun onBindViewHolder(holder: Holder, position: Int) = holder.bindTo(cards[position])
 
         private inner class Holder(private val view: View) : RecyclerView.ViewHolder(view) {
-            private lateinit var data: CardType
+            private lateinit var cardType: CardType
 
             init {
                 view.setOnClickListener {
-                    Snackbar.make(it, "Pressed New on ${data.name}", Snackbar.LENGTH_LONG)
-                            .show()
+                    val intent = Intent(this@MainActivity, NoteActivity::class.java).also {
+                        it.putExtra(EXTRA_CARD_TYPE, cardType)
+                    }
+
+                    startActivityForResult(intent, NOTE_TYPE)
                 }
                 view.list_layout.setOnClickListener {
-                    Snackbar.make(it, "Pressed List on ${data.name}", Snackbar.LENGTH_LONG)
-                            .show();
+                    val intent = Intent(this@MainActivity, ListActivity::class.java).also {
+                        it.putExtra(EXTRA_CARD_TYPE, cardType)
+                        it.putParcelableArrayListExtra(EXTRA_CARDS_DATA, ArrayList(DB[cardType]!!.toList()))
+                    }
+
+                    startActivity(intent)
                 }
             }
 
-            fun bindTo(data: CardType) {
-                this.data = data
-                view.name.text = data.name
+            fun bindTo(cardType: CardType) {
+                this.cardType = cardType
+                view.name.text = cardType.name
+                view.setBackgroundColor(cardType.color)
+                view.logo.setImageResource(cardType.logo)
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (resultCode == Activity.RESULT_OK) {
+            when (requestCode) {
+                CONSTRUCTOR_CARD_TYPE -> {
+                    val cardType = data.getParcelableExtra<CardType>(EXTRA_CARD_TYPE)
+                    DB[cardType] = mutableListOf()
+                    cards.add(cardType)
+                    card_view.adapter.notifyItemInserted(cards.lastIndex)
+                }
+                NOTE_TYPE -> {
+                    val cardType = data.getParcelableExtra<CardType>(EXTRA_CARD_TYPE)!!
+                    val cardData = data.getParcelableExtra<CardData>(EXTRA_CARD_DATA)!!
+                    DB[cardType]?.add(cardData)
+                }
+                else -> error("impossible case")
             }
         }
     }
