@@ -35,18 +35,19 @@ class NoteActivity : AppCompatActivity() {
                             data.add(mutableListOf())
 
                             when (attr) {
-                                is ShortText -> {
-                                    textView(attr.label)
-                                    editText().apply {
-                                        tag = "data"
-                                        inputType = InputType.TYPE_CLASS_TEXT
-                                    }
-                                }
-                                is LongText -> {
-                                    textView(attr.label)
-                                    editText().apply {
-                                        tag = "data"
-                                        inputType = InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+                                is Text -> {
+                                    if (attr.short) {
+                                        textView(attr.label)
+                                        editText().apply {
+                                            tag = "data"
+                                            inputType = InputType.TYPE_CLASS_TEXT
+                                        }
+                                    } else {
+                                        textView(attr.label)
+                                        editText().apply {
+                                            tag = "data"
+                                            inputType = InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+                                        }
                                     }
                                 }
                                 is Photo -> {

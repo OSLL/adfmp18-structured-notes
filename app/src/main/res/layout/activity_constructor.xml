@@ -49,17 +49,13 @@
             app:layout_constraintStart_toStartOf="parent"
             android:layout_marginStart="8dp" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
             android:onClick="onAddCardTypeClick"/>
-    <LinearLayout
-            android:orientation="vertical"
+    <android.support.v7.widget.RecyclerView
             android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginEnd="8dp" app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
-            android:id="@+id/constructor" android:layout_marginBottom="8dp"
-            app:layout_constraintBottom_toTopOf="@+id/attrButtons"
-            android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/constraintLayout"
-            android:padding="8dp">
-    </LinearLayout>
+            android:layout_height="0dp" app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="8dp" android:id="@+id/template"
+            app:layout_constraintTop_toBottomOf="@+id/constraintLayout"
+            app:layout_constraintBottom_toTopOf="@+id/attrButtons" app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="8dp"/>
     <LinearLayout
             android:orientation="horizontal"
             android:layout_width="0dp"

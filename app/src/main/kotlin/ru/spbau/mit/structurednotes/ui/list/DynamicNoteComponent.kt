@@ -15,19 +15,20 @@ class DynamicNoteComponent(private val cardType: CardType) : AnkoComponent<Conte
             for (attr in cardType.layout) {
                 linearLayout {
                     when (attr) {
-                        is ShortText -> {
-                            textView(attr.label)
-                            textView {
-                                tag = "bind"
-                                text = "default"
-                            }
-                        }
-                        is LongText -> {
-                            verticalLayout {
+                        is Text -> {
+                            if (attr.short) {
                                 textView(attr.label)
                                 textView {
                                     tag = "bind"
                                     text = "default"
+                                }
+                            } else {
+                                verticalLayout {
+                                    textView(attr.label)
+                                    textView {
+                                        tag = "bind"
+                                        text = "default"
+                                    }
                                 }
                             }
                         }
@@ -60,10 +61,7 @@ fun View.bindData(cardType: CardType, data: List<List<String>>) {
         val attrData = data[index][0]
 
         when (attr) {
-            is ShortText -> {
-                view.findViewWithTag<TextView>("bind").text = attrData
-            }
-            is LongText -> {
+            is Text -> {
                 view.findViewWithTag<TextView>("bind").text = attrData
             }
             is Photo -> {
