@@ -2,16 +2,24 @@ package ru.spbau.mit.structurednotes.ui.note
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
-import android.support.design.widget.Snackbar
+import android.os.Environment
+import android.provider.MediaStore
+import android.support.v4.content.FileProvider
 import android.support.v7.app.AppCompatActivity
-import android.text.InputType
 import android.view.View
-import android.widget.TextView
+import android.widget.ImageView
 import kotlinx.android.synthetic.main.activity_note.*
-import org.jetbrains.anko.*
+import kotlinx.android.synthetic.main.note_photo.view.*
+import kotlinx.android.synthetic.main.short_note.view.*
 import ru.spbau.mit.structurednotes.R
 import ru.spbau.mit.structurednotes.data.*
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
+
 
 class NoteActivity : AppCompatActivity() {
 
@@ -25,77 +33,42 @@ class NoteActivity : AppCompatActivity() {
 
         cardType = intent.getParcelableExtra(EXTRA_CARD_TYPE)
 
-        layout.addView(
-                with(AnkoContext.create(this, false)) {
-                    verticalLayout {
-                        textView(cardType.name)
-                        setBackgroundColor(cardType.color)
+        for (attr in cardType.layout) {
+            data.add(mutableListOf())
+            inputLayout.addView(attr.injectToNote(this, inputLayout).also { it.setBackgroundColor(cardType.color) } )
+        }
 
-                        cardType.layout.forEachIndexed { index, attr ->
-                            data.add(mutableListOf())
-
-                            when (attr) {
-                                is Text -> {
-                                    if (attr.short) {
-                                        textView(attr.label)
-                                        editText().apply {
-                                            tag = "data"
-                                            inputType = InputType.TYPE_CLASS_TEXT
-                                        }
-                                    } else {
-                                        textView(attr.label)
-                                        editText().apply {
-                                            tag = "data"
-                                            inputType = InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE
-                                        }
-                                    }
-                                }
-                                is Photo -> {
-                                    imageButton(R.drawable.ic_add_photo).apply {
-                                        tag = "data"
-                                        setOnClickListener {
-                                            Snackbar.make(it, "photo", Snackbar.LENGTH_LONG).show()
-                                        }
-                                    }
-                                }
-                                is Audio -> {
-                                    imageButton(R.drawable.ic_add_audio).apply {
-                                        tag = "data"
-                                        setOnClickListener {
-                                            Snackbar.make(it, "audio", Snackbar.LENGTH_LONG).show()
-                                        }
-                                    }
-                                }
-                                is GPS -> {
-                                    if (attr.auto) {
-                                        textView("your location is ...").apply {
-                                            tag = "data"
-                                        }
-                                    } else {
-                                        textView("map view").apply {
-                                            tag = "data"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-        )
-
-        val intent = Intent()
-
-        setResult(Activity.RESULT_CANCELED, intent)
+        setResult(Activity.RESULT_CANCELED, Intent())
     }
 
+    fun onPhotoButtonClick(view: View) {
+        val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+
+        if (takePictureIntent.resolveActivity(packageManager) != null) {
+            val imageFile = createImageFile()
+            val imageUri = FileProvider.getUriForFile(this, "com.example.android.fileprovider", imageFile)
+
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
+            photoData().add(imageUri.toString())
+
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
+        }
+    }
+
+    fun onAudioButtonClick(view: View) {
+
+    }
+
+
     fun onAddButtonClick(view: View) {
-        layout.childrenRecursiveSequence()
-                .filter { it.tag == "data" }
-                .forEachIndexed { index, view ->
-                    when (view) {
-                        is TextView -> data[index] = mutableListOf(view.text.toString())
-                    }
-                }
+        cardType.layout.forEachIndexed { index, cardAttribute ->
+            if (cardAttribute !is Text) {
+                return@forEachIndexed
+            }
+
+            val text = inputLayout.getChildAt(index).short_note_note.text.toString()
+            data[index] = mutableListOf(text)
+        }
 
         val intent = Intent().also {
             it.putExtra(EXTRA_CARD_TYPE, cardType)
@@ -105,5 +78,47 @@ class NoteActivity : AppCompatActivity() {
         setResult(Activity.RESULT_OK, intent)
 
         finish()
+    }
+
+    fun photoData(): MutableList<String> {
+        val position = cardType.layout.indexOfFirst { it is Photo }
+        return data[position]
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (resultCode == Activity.RESULT_OK) {
+            when (requestCode) {
+                REQUEST_IMAGE_CAPTURE -> {
+                    val position = cardType.layout.indexOfFirst { it is Photo }
+
+                    val imageView = ImageView(this)
+
+                    val bitmap: Bitmap = MediaStore.Images.Media.getBitmap(contentResolver, Uri.parse(photoData().last()))
+                    val bitmapScaled =  Bitmap.createScaledBitmap(bitmap, bitmap.getScaledWidth(50), bitmap.getScaledHeight(50), true)
+
+                    imageView.setImageBitmap(bitmapScaled)
+
+                    inputLayout.getChildAt(position).thumbnails.addView(imageView)
+                }
+
+                else -> error("impossible branch")
+            }
+        } else {
+            when (requestCode) {
+                REQUEST_IMAGE_CAPTURE -> photoData().removeAt(photoData().lastIndex)
+            }
+        }
+    }
+
+    private fun createImageFile(): File {
+        // Create an image file name
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+        val imageFileName = "JPEG_" + timeStamp + "_"
+        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return File.createTempFile(imageFileName, ".jpg", storageDir)
+    }
+
+    companion object {
+        var REQUEST_IMAGE_CAPTURE = 1
     }
 }

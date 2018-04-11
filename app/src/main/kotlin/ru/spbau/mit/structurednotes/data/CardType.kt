@@ -1,47 +1,98 @@
 package ru.spbau.mit.structurednotes.data
 
 import android.content.Context
-import android.graphics.Color
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Parcelable
+import android.provider.MediaStore
 import android.support.v7.app.AlertDialog
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.CheckBox
+import android.widget.ImageView
+import android.widget.TextView
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.parcel.RawValue
-import kotlinx.android.synthetic.main.constructor_block.view.*
 import kotlinx.android.synthetic.main.constructor_text_conf.view.*
-import org.jetbrains.anko.*
+import kotlinx.android.synthetic.main.list_long.view.*
+import kotlinx.android.synthetic.main.list_photo.view.*
+import kotlinx.android.synthetic.main.list_short.view.*
+import kotlinx.android.synthetic.main.short_note.view.*
+import org.jetbrains.anko.AnkoContext
+import org.jetbrains.anko.checkBox
+import org.jetbrains.anko.layoutInflater
+import org.jetbrains.anko.linearLayout
 import ru.spbau.mit.structurednotes.R
+import ru.spbau.mit.structurednotes.utils.inflate
+
 
 abstract class CardAttribute {
-    abstract fun injectTo(ctx: Context, itemView: ViewGroup)
+    abstract fun injectToConstructor(ctx: Context, itemView: ViewGroup)
+    abstract fun injectToNote(ctx: Context, itemView: ViewGroup): View
+    abstract fun injectToList(ctx: Context, noteView: ViewGroup, data: List<String>)
 }
 
 @Parcelize
 class Photo : CardAttribute(), Parcelable {
-    override fun injectTo(ctx: Context, itemView: ViewGroup) {
+    override fun injectToConstructor(ctx: Context, itemView: ViewGroup) {
         val imageView = ImageView(ctx)
         imageView.setImageResource(R.drawable.ic_add_photo)
         itemView.addView(imageView)
     }
+
+    override fun injectToList(ctx: Context, noteView: ViewGroup, data: List<String>) {
+        val photos = noteView.inflate(R.layout.list_photo) as ViewGroup
+
+        for (photoUri in data) {
+            val uri = Uri.parse(photoUri)
+            val bitmap = MediaStore.Images.Media.getBitmap(ctx.contentResolver, uri)
+            val bitmapScaled =  Bitmap.createScaledBitmap(bitmap, bitmap.getScaledWidth(80), bitmap.getScaledHeight(80), true)
+
+            val imageView = ImageView(ctx)
+            imageView.setImageBitmap(bitmapScaled)
+            photos.list_photo_photos.addView(imageView)
+        }
+
+        noteView.addView(photos)
+    }
+
+
+    override fun injectToNote(ctx: Context, itemView: ViewGroup) = itemView.inflate(R.layout.note_photo)
 }
 
 @Parcelize
 class Audio: CardAttribute(), Parcelable {
-    override fun injectTo(ctx: Context, itemView: ViewGroup) {
+    override fun injectToConstructor(ctx: Context, itemView: ViewGroup) {
         val imageView = ImageView(ctx)
         imageView.setImageResource(R.drawable.ic_add_audio)
         itemView.addView(imageView)
     }
+
+    override fun injectToList(ctx: Context, noteView: ViewGroup, data: List<String>) {
+        noteView.addView(TextView(ctx).also { it.text = "AUDIO" })
+    }
+
+    override fun injectToNote(ctx: Context, itemView: ViewGroup) = itemView.inflate(R.layout.note_audio)
 }
 
 @Parcelize
 class GPS(val auto: Boolean): CardAttribute(), Parcelable {
-    override fun injectTo(ctx: Context, itemView: ViewGroup) {
+    override fun injectToConstructor(ctx: Context, itemView: ViewGroup) {
         val imageView = ImageView(ctx)
         imageView.setImageResource(R.drawable.img_map)
         itemView.addView(imageView)
+    }
+
+    override fun injectToList(ctx: Context, noteView: ViewGroup, data: List<String>) {
+        /*
+        val textView = TextView(ctx)
+        textView.text = "gps"
+        noteView.addView(textView)
+        */
+    }
+
+    override fun injectToNote(ctx: Context, itemView: ViewGroup): View {
+        error("no")
     }
 
     companion object {
@@ -69,23 +120,30 @@ class GPS(val auto: Boolean): CardAttribute(), Parcelable {
 
 @Parcelize
 class Text(val short:Boolean, val label: String): CardAttribute(), Parcelable {
-    override fun injectTo(ctx: Context, itemView: ViewGroup) {
-        val linearLayout = LinearLayout(ctx)
+    override fun injectToConstructor(ctx: Context, itemView: ViewGroup) {
+        itemView.inflate(R.layout.short_note, true).also {
+            it.short_note_label.text = label
+            it.short_note_note.isEnabled = false
+        }
+    }
 
-        val labelTextView = TextView(ctx)
-        labelTextView.text = "$label:"
-        labelTextView.setPadding(4,4,4,4)
-        linearLayout.addView(labelTextView)
+    override fun injectToNote(ctx: Context, itemView: ViewGroup) =
+            itemView.inflate(R.layout.short_note).also {
+                it.short_note_label.text = label
+            }
 
-        val yourTextView = TextView(ctx)
-        yourTextView.text = "your text will be here"
-        yourTextView.setBackgroundColor(Color.rgb(0xff, 0xff, 0xff))
-        yourTextView.setPadding(4,4,4,4)
-        linearLayout.addView(yourTextView)
-
-        itemView.addView(linearLayout)
-
-        linearLayout.setPadding(8, 8, 8, 8)
+    override fun injectToList(ctx: Context, noteView: ViewGroup, data: List<String>) {
+        if (short) {
+            noteView.inflate(R.layout.list_short, true).also {
+                it.list_short_label.text = label
+                it.list_short_text.text = data[0]
+            }
+        } else {
+            noteView.inflate(R.layout.list_long, true).also {
+                it.list_long_label.text = label
+                it.list_long_text.text = data[0]
+            }
+        }
     }
 
     companion object {

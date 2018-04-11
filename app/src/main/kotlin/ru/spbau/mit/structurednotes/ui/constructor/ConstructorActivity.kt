@@ -15,7 +15,6 @@ import android.widget.Toast
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder
 import kotlinx.android.synthetic.main.activity_constructor.*
 import org.jetbrains.anko.AnkoContext
-import org.jetbrains.anko.backgroundColor
 import org.jetbrains.anko.gridLayout
 import org.jetbrains.anko.imageButton
 import ru.spbau.mit.structurednotes.R
@@ -83,7 +82,7 @@ class ConstructorActivity : AppCompatActivity() {
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bindTo(attr: CardAttribute) = attr.injectTo(baseContext, itemView as ViewGroup)
+        fun bindTo(attr: CardAttribute) = attr.injectToConstructor(baseContext, itemView as ViewGroup)
     }
 
     fun onAddPhotoButtonClick(view: View) {
