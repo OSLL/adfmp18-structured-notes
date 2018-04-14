@@ -3,6 +3,7 @@ package ru.spbau.mit.structurednotes.ui.note
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
+import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -12,6 +13,7 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.ImageView
 import kotlinx.android.synthetic.main.activity_note.*
+import kotlinx.android.synthetic.main.note_audio.*
 import kotlinx.android.synthetic.main.note_photo.view.*
 import kotlinx.android.synthetic.main.short_note.view.*
 import ru.spbau.mit.structurednotes.R
@@ -55,10 +57,51 @@ class NoteActivity : AppCompatActivity() {
         }
     }
 
-    fun onAudioButtonClick(view: View) {
+    inner class Recorder {
+        private var mediaRecorder: MediaRecorder? = null
+        private var uri: String? = null
 
+        fun start() {
+            val file = createAudioFile()
+            uri = FileProvider.getUriForFile(baseContext, "com.example.android.fileprovider", file).toString()
+
+            mediaRecorder = MediaRecorder()
+
+            mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
+            mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            mediaRecorder?.setOutputFile(file.absolutePath)
+            mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+            mediaRecorder?.prepare()
+            mediaRecorder?.start()
+        }
+
+        fun isRecordering(): Boolean {
+            return mediaRecorder != null
+        }
+
+        fun stop(): String {
+            mediaRecorder?.stop()
+            mediaRecorder?.release()
+            mediaRecorder = null
+            return uri!!
+        }
     }
 
+    val recorder = Recorder()
+
+    fun onAudioButtonClick(view: View) {
+        if (recorder.isRecordering()) {
+            val path = recorder.stop()
+            audioData().add(path)
+
+            note_audio_record.setImageResource(R.drawable.ic_add_audio)
+            note_audio_records.adapter.notifyItemInserted(audioData().lastIndex)
+        } else {
+            recorder.start()
+
+            note_audio_record.setImageResource(R.drawable.abc_ic_star_black_36dp)
+        }
+    }
 
     fun onAddButtonClick(view: View) {
         cardType.layout.forEachIndexed { index, cardAttribute ->
@@ -78,6 +121,11 @@ class NoteActivity : AppCompatActivity() {
         setResult(Activity.RESULT_OK, intent)
 
         finish()
+    }
+
+    fun audioData(): MutableList<String> {
+        val position = cardType.layout.indexOfFirst { it is Audio }
+        return data[position]
     }
 
     fun photoData(): MutableList<String> {
@@ -112,10 +160,15 @@ class NoteActivity : AppCompatActivity() {
 
     private fun createImageFile(): File {
         // Create an image file name
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-        val imageFileName = "JPEG_" + timeStamp + "_"
+        val imageFileName = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
         val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         return File.createTempFile(imageFileName, ".jpg", storageDir)
+    }
+
+    private fun createAudioFile(): File {
+        val imageFileName = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return File.createTempFile(imageFileName, ".mpeg4", storageDir)
     }
 
     companion object {

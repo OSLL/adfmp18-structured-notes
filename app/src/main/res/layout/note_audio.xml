@@ -8,11 +8,14 @@
     <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content">
         <ImageButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" app:srcCompat="@drawable/ic_add_audio"
-                android:id="@+id/audioButton" android:layout_weight="1"
+                android:id="@+id/note_audio_record" android:layout_weight="1"
                 android:onClick="onAudioButtonClick"/>
     </LinearLayout>
+    <android.support.v7.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:id="@+id/note_audio_records"/>
 </LinearLayout>
