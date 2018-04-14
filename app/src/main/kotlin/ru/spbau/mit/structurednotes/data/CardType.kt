@@ -19,6 +19,7 @@ import android.widget.TextView
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.parcel.RawValue
 import kotlinx.android.synthetic.main.constructor_text_conf.view.*
+import kotlinx.android.synthetic.main.list_audio.view.*
 import kotlinx.android.synthetic.main.list_long.view.*
 import kotlinx.android.synthetic.main.list_photo.view.*
 import kotlinx.android.synthetic.main.list_short.view.*
@@ -74,22 +75,28 @@ class Audio: CardAttribute(), Parcelable {
     }
 
     override fun injectToList(ctx: Context, noteView: ViewGroup, data: List<String>) {
-        noteView.addView(TextView(ctx).also { it.text = "AUDIO" })
-    }
-
-    override fun injectToNote(noteActivity: NoteActivity, itemView: ViewGroup) = itemView.inflate(R.layout.note_audio).also { note ->
-        note.note_audio_records.adapter = object : RecyclerView.Adapter<RecyclerHolder>() {
-            override fun getItemCount(): Int = noteActivity.audioData().size
-
-            override fun onBindViewHolder(holder: RecyclerHolder, position: Int) {
-                holder.bindTo(Uri.parse(noteActivity.audioData()[position]))
-            }
-
-            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-                    RecyclerHolder(noteActivity, parent.inflate(R.layout.note_audio_record))
+        val view = noteView.inflate(R.layout.list_audio).also {
+            it.list_audio_records.adapter = RecyclerAdapter(ctx, data)
+            it.list_audio_records.layoutManager = LinearLayoutManager(ctx)
         }
 
-        note.note_audio_records.layoutManager = LinearLayoutManager(noteActivity)
+        noteView.addView(view)
+    }
+
+    override fun injectToNote(noteActivity: NoteActivity, itemView: ViewGroup) = itemView.inflate(R.layout.note_audio).also {
+        it.note_audio_records.adapter = RecyclerAdapter(noteActivity, noteActivity.audioData())
+        it.note_audio_records.layoutManager = LinearLayoutManager(noteActivity)
+    }
+
+    class RecyclerAdapter(val ctx: Context, val data: List<String>) : RecyclerView.Adapter<RecyclerHolder>() {
+        override fun getItemCount(): Int = data.size
+
+        override fun onBindViewHolder(holder: RecyclerHolder, position: Int) {
+            holder.bindTo(Uri.parse(data[position]))
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+                RecyclerHolder(ctx, parent.inflate(R.layout.note_audio_record))
     }
 
     class RecyclerHolder(val ctx: Context, itemView: View) : RecyclerView.ViewHolder(itemView) {
