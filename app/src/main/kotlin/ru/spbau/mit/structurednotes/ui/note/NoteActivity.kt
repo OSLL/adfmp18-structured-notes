@@ -12,6 +12,7 @@ import android.support.v4.content.FileProvider
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.ImageView
+import com.google.android.gms.maps.MapView
 import kotlinx.android.synthetic.main.activity_note.*
 import kotlinx.android.synthetic.main.note_audio.*
 import kotlinx.android.synthetic.main.note_photo.view.*
@@ -28,6 +29,7 @@ class NoteActivity : AppCompatActivity() {
     lateinit var cardType: CardType
 
     val data: MutableList<MutableList<String>> = mutableListOf()
+    var mapView: MapView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,7 +42,18 @@ class NoteActivity : AppCompatActivity() {
             inputLayout.addView(attr.injectToNote(this, inputLayout).also { it.setBackgroundColor(cardType.color) } )
         }
 
+        mapView?.onCreate(savedInstanceState)
         setResult(Activity.RESULT_CANCELED, Intent())
+    }
+
+    override fun onStart() {
+        super.onStart()
+        mapView?.onStart()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mapView?.onResume()
     }
 
     fun onPhotoButtonClick(view: View) {
@@ -121,6 +134,11 @@ class NoteActivity : AppCompatActivity() {
         setResult(Activity.RESULT_OK, intent)
 
         finish()
+    }
+
+    fun gpsData(): MutableList<String> {
+        val position = cardType.layout.indexOfFirst { it is GPS }
+        return data[position]
     }
 
     fun audioData(): MutableList<String> {

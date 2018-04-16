@@ -6,6 +6,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
+import com.google.android.gms.maps.MapView
 import kotlinx.android.synthetic.main.activity_list.*
 import ru.spbau.mit.structurednotes.R
 import ru.spbau.mit.structurednotes.data.CardData
@@ -17,6 +18,7 @@ import ru.spbau.mit.structurednotes.utils.inflate
 class ListActivity : AppCompatActivity() {
 
     private lateinit var cardType: CardType
+    var mapView: MapView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +33,16 @@ class ListActivity : AppCompatActivity() {
 
         notes_list_view.layoutManager = LinearLayoutManager(this)
         notes_list_view.adapter = RecyclerAdapter(notesData)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        mapView?.onStart()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mapView?.onResume()
     }
 
     private inner class RecyclerAdapter(val data: List<CardData>): RecyclerView.Adapter<RecyclerHolder>() {
@@ -48,7 +60,7 @@ class ListActivity : AppCompatActivity() {
     private inner class RecyclerHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bindTo(data: List<List<String>>) {
             cardType.layout.forEachIndexed { index, attr ->
-                attr.injectToList(baseContext, itemView as ViewGroup, data[index])
+                attr.injectToList(this@ListActivity, itemView as ViewGroup, data[index])
             }
         }
     }

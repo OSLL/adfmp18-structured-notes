@@ -1,9 +1,14 @@
 package ru.spbau.mit.structurednotes.data
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.media.MediaPlayer
 import android.net.Uri
+import android.os.Bundle
 import android.os.Handler
 import android.os.Parcelable
 import android.provider.MediaStore
@@ -15,7 +20,11 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.SeekBar
-import android.widget.TextView
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.MapView
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.parcel.RawValue
 import kotlinx.android.synthetic.main.constructor_text_conf.view.*
@@ -28,6 +37,7 @@ import kotlinx.android.synthetic.main.note_audio_record.view.*
 import kotlinx.android.synthetic.main.short_note.view.*
 import org.jetbrains.anko.*
 import ru.spbau.mit.structurednotes.R
+import ru.spbau.mit.structurednotes.ui.list.ListActivity
 import ru.spbau.mit.structurednotes.ui.note.NoteActivity
 import ru.spbau.mit.structurednotes.utils.inflate
 
@@ -35,7 +45,7 @@ import ru.spbau.mit.structurednotes.utils.inflate
 abstract class CardAttribute {
     abstract fun injectToConstructor(ctx: Context, itemView: ViewGroup)
     abstract fun injectToNote(noteActivity: NoteActivity, itemView: ViewGroup): View
-    abstract fun injectToList(ctx: Context, noteView: ViewGroup, data: List<String>)
+    abstract fun injectToList(listActivity: ListActivity, noteView: ViewGroup, data: List<String>)
 }
 
 @Parcelize
@@ -46,15 +56,15 @@ class Photo : CardAttribute(), Parcelable {
         itemView.addView(imageView)
     }
 
-    override fun injectToList(ctx: Context, noteView: ViewGroup, data: List<String>) {
+    override fun injectToList(listActivity: ListActivity, noteView: ViewGroup, data: List<String>) {
         val photos = noteView.inflate(R.layout.list_photo) as ViewGroup
 
         for (photoUri in data) {
             val uri = Uri.parse(photoUri)
-            val bitmap = MediaStore.Images.Media.getBitmap(ctx.contentResolver, uri)
+            val bitmap = MediaStore.Images.Media.getBitmap(listActivity.contentResolver, uri)
             val bitmapScaled =  Bitmap.createScaledBitmap(bitmap, bitmap.getScaledWidth(80), bitmap.getScaledHeight(80), true)
 
-            val imageView = ImageView(ctx)
+            val imageView = ImageView(listActivity)
             imageView.setImageBitmap(bitmapScaled)
             photos.list_photo_photos.addView(imageView)
         }
@@ -74,10 +84,10 @@ class Audio: CardAttribute(), Parcelable {
         itemView.addView(imageView)
     }
 
-    override fun injectToList(ctx: Context, noteView: ViewGroup, data: List<String>) {
+    override fun injectToList(listActivity: ListActivity, noteView: ViewGroup, data: List<String>) {
         val view = noteView.inflate(R.layout.list_audio).also {
-            it.list_audio_records.adapter = RecyclerAdapter(ctx, data)
-            it.list_audio_records.layoutManager = LinearLayoutManager(ctx)
+            it.list_audio_records.adapter = RecyclerAdapter(listActivity, data)
+            it.list_audio_records.layoutManager = LinearLayoutManager(listActivity)
         }
 
         noteView.addView(view)
@@ -153,16 +163,67 @@ class GPS(val auto: Boolean): CardAttribute(), Parcelable {
         itemView.addView(imageView)
     }
 
-    override fun injectToList(ctx: Context, noteView: ViewGroup, data: List<String>) {
-        /*
-        val textView = TextView(ctx)
-        textView.text = "gps"
-        noteView.addView(textView)
-        */
+    override fun injectToList(listActivity: ListActivity, noteView: ViewGroup, data: List<String>) {
+        listActivity.mapView = MapView(listActivity)
+        listActivity.mapView?.onCreate(Bundle())
+
+        listActivity.mapView?.getMapAsync { map ->
+            val pos = LatLng(data[0].toDouble(), data[1].toDouble())
+            map.addMarker(MarkerOptions().position(pos))
+            map.animateCamera(CameraUpdateFactory.newLatLng(pos))
+        }
+
+        noteView.addView(listActivity.mapView)
     }
 
     override fun injectToNote(noteActivity: NoteActivity, itemView: ViewGroup): View {
-        error("no")
+        noteActivity.mapView = MapView(noteActivity)
+
+        noteActivity.gpsData().add("lat")
+        noteActivity.gpsData().add("lng")
+
+        noteActivity.mapView?.getMapAsync { map ->
+            if (noteActivity.checkCallingOrSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                if (auto) {
+                    val locationManager = noteActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                    val markerOptions = MarkerOptions().position(LatLng(.0, .0)).title("you are here")
+                    var marker: Marker? = null
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10f, object : LocationListener {
+                        override fun onLocationChanged(p0: Location?) {
+                            marker?.remove()
+                            val location = p0!!
+                            val latLng = LatLng(location.latitude, location.longitude)
+                            marker =  map.addMarker(markerOptions.position(latLng))
+                            map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 5f))
+
+                            noteActivity.gpsData()[0] = latLng.latitude.toString()
+                            noteActivity.gpsData()[1] = latLng.longitude.toString()
+                        }
+
+                        override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {}
+
+                        override fun onProviderEnabled(p0: String?) {}
+
+                        override fun onProviderDisabled(p0: String?) {}
+
+                    })
+                } else {
+                    val markerOptions = MarkerOptions().position(LatLng(.0, .0))
+                    var marker: Marker? = null
+                    map.isMyLocationEnabled = true
+                    map.setOnMapClickListener { pos ->
+                        marker?.remove()
+                        marker = map.addMarker(markerOptions.position(pos))
+                        map.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 10f))
+
+                        noteActivity.gpsData()[0] = pos.latitude.toString()
+                        noteActivity.gpsData()[1] = pos.longitude.toString()
+                    }
+                }
+            }
+        }
+
+        return noteActivity.mapView!!
     }
 
     companion object {
@@ -202,7 +263,7 @@ class Text(val short:Boolean, val label: String): CardAttribute(), Parcelable {
                 it.short_note_label.text = label
             }
 
-    override fun injectToList(ctx: Context, noteView: ViewGroup, data: List<String>) {
+    override fun injectToList(listActivity: ListActivity, noteView: ViewGroup, data: List<String>) {
         if (short) {
             noteView.inflate(R.layout.list_short, true).also {
                 it.list_short_label.text = label

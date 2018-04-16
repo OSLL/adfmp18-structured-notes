@@ -59,4 +59,5 @@ dependencies {
 
     implementation "org.jetbrains.anko:anko:$anko_version"
     implementation 'com.github.QuadFlask:colorpicker:0.0.13'
+    implementation 'com.google.android.gms:play-services-maps:12.0.1'
 }
