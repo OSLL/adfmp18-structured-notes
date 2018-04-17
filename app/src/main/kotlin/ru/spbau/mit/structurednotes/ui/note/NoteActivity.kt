@@ -1,6 +1,7 @@
 package ru.spbau.mit.structurednotes.ui.note
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.media.MediaRecorder
@@ -12,7 +13,6 @@ import android.support.v4.content.FileProvider
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.ImageView
-import com.google.android.gms.maps.MapView
 import kotlinx.android.synthetic.main.activity_note.*
 import kotlinx.android.synthetic.main.note_audio.*
 import kotlinx.android.synthetic.main.note_photo.view.*
@@ -29,7 +29,6 @@ class NoteActivity : AppCompatActivity() {
     lateinit var cardType: CardType
 
     val data: MutableList<MutableList<String>> = mutableListOf()
-    var mapView: MapView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,18 +41,7 @@ class NoteActivity : AppCompatActivity() {
             inputLayout.addView(attr.injectToNote(this, inputLayout).also { it.setBackgroundColor(cardType.color) } )
         }
 
-        mapView?.onCreate(savedInstanceState)
         setResult(Activity.RESULT_CANCELED, Intent())
-    }
-
-    override fun onStart() {
-        super.onStart()
-        mapView?.onStart()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mapView?.onResume()
     }
 
     fun onPhotoButtonClick(view: View) {
@@ -176,20 +164,20 @@ class NoteActivity : AppCompatActivity() {
         }
     }
 
-    private fun createImageFile(): File {
-        // Create an image file name
-        val imageFileName = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        return File.createTempFile(imageFileName, ".jpg", storageDir)
-    }
-
-    private fun createAudioFile(): File {
-        val imageFileName = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        return File.createTempFile(imageFileName, ".mpeg4", storageDir)
-    }
-
     companion object {
         var REQUEST_IMAGE_CAPTURE = 1
     }
+}
+
+fun Context.createImageFile(): File {
+    // Create an image file name
+    val imageFileName = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+    val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+    return File.createTempFile(imageFileName, ".jpg", storageDir)
+}
+
+fun Context.createAudioFile(): File {
+    val imageFileName = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+    val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+    return File.createTempFile(imageFileName, ".mpeg4", storageDir)
 }
