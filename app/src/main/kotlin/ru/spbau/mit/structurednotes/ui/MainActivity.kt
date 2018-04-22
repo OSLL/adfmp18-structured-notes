@@ -1,8 +1,10 @@
 package ru.spbau.mit.structurednotes.ui
 
 import android.app.Activity
+import android.arch.persistence.room.Room
 import android.content.Intent
 import android.os.Bundle
+import android.os.Parcel
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -27,13 +29,17 @@ class MainActivity : AppCompatActivity() {
     private val CONSTRUCTOR_CARD_TYPE = 1
     private val NOTE_TYPE = 2
 
-    private val DB: MutableMap<CardType, MutableList<CardData>> = mutableMapOf()
+    private lateinit var db: CardTypeDatabase
+    private lateinit var dao: CardTypeDataDao
     private val cards: MutableList<CardType> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+
+        db = Room.databaseBuilder(this, CardTypeDatabase::class.java, "db").build()
+        dao = db.cardTypeDataDao()
 
         ItemTouchHelper(object : ItemTouchHelper.Callback() {
 
@@ -92,7 +98,7 @@ class MainActivity : AppCompatActivity() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
                 Holder(parent.inflate(R.layout.activity_main_card))
 
-        override fun getItemCount() = DB.size
+        override fun getItemCount() = dao.cardTypeSize()
 
         override fun onBindViewHolder(holder: Holder, position: Int) = holder.bindTo(cards[position])
 
@@ -133,9 +139,11 @@ class MainActivity : AppCompatActivity() {
             when (requestCode) {
                 CONSTRUCTOR_CARD_TYPE -> {
                     val cardType = data.getParcelableExtra<CardType>(EXTRA_CARD_TYPE)
-                    DB[cardType] = mutableListOf()
                     cards.add(cardType)
                     card_view.adapter.notifyItemInserted(cards.lastIndex)
+
+                    // add cardType to db
+                    dao.addType(cardType.id, cardType.toString())
                 }
                 NOTE_TYPE -> {
                     val cardType = data.getParcelableExtra<CardType>(EXTRA_CARD_TYPE)!!

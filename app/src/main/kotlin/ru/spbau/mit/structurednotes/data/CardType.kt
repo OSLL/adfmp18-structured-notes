@@ -351,7 +351,7 @@ class Text(val short:Boolean, val label: String): CardAttribute(), Parcelable {
 }
 
 
-class CardTypeBuilder {
+class CardTypeBuilder(val id: Int) {
     val layout = mutableListOf<CardAttribute>()
 
     var name: String? = null
@@ -383,7 +383,7 @@ class CardTypeBuilder {
             return null
         }
 
-        return CardType(name!!, color!!, logo!!, layout)
+        return CardType(id, name!!, color!!, logo!!, layout)
     }
 }
 
@@ -391,8 +391,8 @@ const val EXTRA_CARD_TYPE = "ru.spbau.mit.structurednotes.data.CardType"
 const val EXTRA_CARD_DATA = "ru.spbau.mit.structurednotes.data.CardsData"
 const val EXTRA_CARDS_DATA = "ru.spbau.mit.structurednotes.data.CARDS_DATA"
 
-@Parcelize
-data class CardType(val name: String, val color: Int, val logo: Int, val layout: List<@RawValue CardAttribute>) : Parcelable {
+@Serializable
+data class CardType(val id: Int, val name: String, val color: Int, val logo: Int, val layout: List<@RawValue CardAttribute>) : Parcelable {
     override fun equals(other: Any?): Boolean = if (other is CardType) other.name == name else false
 
     override fun hashCode(): Int {
