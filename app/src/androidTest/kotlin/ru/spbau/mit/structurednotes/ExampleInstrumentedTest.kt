@@ -7,6 +7,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 import org.junit.Assert.*
+import org.junit.runners.Suite
+
+@RunWith(Suite::class)
+@Suite.SuiteClasses(ExampleInstrumentedTest::class)
+class ExampleTestSuite {}
 
 /**
  * Instrumented test, which will execute on an Android device.
