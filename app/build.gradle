@@ -8,10 +8,17 @@ apply plugin: 'org.jetbrains.kotlin.android.extensions'
 
 apply plugin: 'kotlinx-serialization'
 
+buildscript {
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.1.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlinx:kotlinx-gradle-serialization-plugin:$serialization_version"
+    }
+}
+
 androidExtensions {
     experimental = true
 }
-
 
 android {
     compileSdkVersion 26
