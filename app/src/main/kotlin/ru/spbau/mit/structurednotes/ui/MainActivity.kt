@@ -147,7 +147,7 @@ class MainActivity : AppCompatActivity() {
                 view.list_layout.setOnClickListener {
                     val intent = Intent(this@MainActivity, ListActivity::class.java).also {
                         it.putExtra(EXTRA_CARD_TYPE, JSON.stringify(cardType))
-                        it.putExtra(EXTRA_CARDS_DATA, JSON.stringify(db.data[cardType.id] ?: emptyList<NoteData>()))
+                        it.putExtra(EXTRA_CARDS_DATA, JSON.stringify(db.data[cardType.id] ?: CardData(mutableListOf())))
                     }
 
                     startActivity(intent)

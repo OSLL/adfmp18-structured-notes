@@ -34,19 +34,38 @@ import kotlinx.android.synthetic.main.map_button.view.*
 import kotlinx.android.synthetic.main.note_audio.view.*
 import kotlinx.android.synthetic.main.note_audio_record.view.*
 import kotlinx.android.synthetic.main.short_note.view.*
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
 import org.jetbrains.anko.*
 import ru.spbau.mit.structurednotes.R
 import ru.spbau.mit.structurednotes.ui.list.ListActivity
 import ru.spbau.mit.structurednotes.ui.note.NoteActivity
 import ru.spbau.mit.structurednotes.ui.note.createImageFile
 import ru.spbau.mit.structurednotes.utils.inflate
+import kotlin.reflect.KClass
 
-
+@Serializable
 abstract class CardAttribute {
     abstract fun injectToConstructor(ctx: Context, itemView: ViewGroup)
     abstract fun injectToNote(noteActivity: NoteActivity, itemView: ViewGroup): View
     abstract fun injectToList(listActivity: ListActivity, noteView: ViewGroup, data: List<String>)
+
+    @Serializer(forClass = CardAttribute::class)
+    companion object : KSerializer<CardAttribute> {
+        override val serialClassDesc: KSerialClassDesc
+            get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+
+        override fun load(input: KInput): CardAttribute {
+            val canonicalName = input.readStringValue()
+            return input.readSerializableValue(serializerByClass(Class.forName(canonicalName).kotlin))
+        }
+
+        override fun save(output: KOutput, obj: CardAttribute) {
+            val canonicalName = obj.javaClass.canonicalName
+            output.writeStringValue(canonicalName)
+            output.writeSerializableValue(serializerByClass(Class.forName(canonicalName).kotlin), obj)
+        }
+
+    }
 }
 
 @Serializable
