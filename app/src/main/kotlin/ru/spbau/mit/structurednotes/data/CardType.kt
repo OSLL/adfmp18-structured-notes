@@ -11,7 +11,6 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
-import android.os.Parcelable
 import android.provider.MediaStore
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
@@ -26,8 +25,6 @@ import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
-import kotlinx.android.parcel.Parcelize
-import kotlinx.android.parcel.RawValue
 import kotlinx.android.synthetic.main.constructor_text_conf.view.*
 import kotlinx.android.synthetic.main.list_audio.view.*
 import kotlinx.android.synthetic.main.list_long.view.*
@@ -37,6 +34,7 @@ import kotlinx.android.synthetic.main.map_button.view.*
 import kotlinx.android.synthetic.main.note_audio.view.*
 import kotlinx.android.synthetic.main.note_audio_record.view.*
 import kotlinx.android.synthetic.main.short_note.view.*
+import kotlinx.serialization.Serializable
 import org.jetbrains.anko.*
 import ru.spbau.mit.structurednotes.R
 import ru.spbau.mit.structurednotes.ui.list.ListActivity
@@ -51,8 +49,8 @@ abstract class CardAttribute {
     abstract fun injectToList(listActivity: ListActivity, noteView: ViewGroup, data: List<String>)
 }
 
-@Parcelize
-class Photo : CardAttribute(), Parcelable {
+@Serializable
+class Photo : CardAttribute() {
     override fun injectToConstructor(ctx: Context, itemView: ViewGroup) {
         val imageView = ImageView(ctx)
         imageView.setImageResource(R.drawable.ic_add_photo)
@@ -79,8 +77,8 @@ class Photo : CardAttribute(), Parcelable {
     override fun injectToNote(noteActivity: NoteActivity, itemView: ViewGroup) = itemView.inflate(R.layout.note_photo)
 }
 
-@Parcelize
-class Audio: CardAttribute(), Parcelable {
+@Serializable
+class Audio: CardAttribute() {
     override fun injectToConstructor(ctx: Context, itemView: ViewGroup) {
         val imageView = ImageView(ctx)
         imageView.setImageResource(R.drawable.ic_add_audio)
@@ -158,8 +156,8 @@ class Audio: CardAttribute(), Parcelable {
     }
 }
 
-@Parcelize
-class GPS(val auto: Boolean): CardAttribute(), Parcelable {
+@Serializable
+class GPS(val auto: Boolean): CardAttribute() {
     override fun injectToConstructor(ctx: Context, itemView: ViewGroup) {
         val imageView = ImageView(ctx)
         imageView.setImageResource(R.drawable.img_map)
@@ -306,8 +304,8 @@ class GPS(val auto: Boolean): CardAttribute(), Parcelable {
     }
 }
 
-@Parcelize
-class Text(val short:Boolean, val label: String): CardAttribute(), Parcelable {
+@Serializable
+class Text(val short: Boolean, val label: String): CardAttribute() {
     override fun injectToConstructor(ctx: Context, itemView: ViewGroup) {
         itemView.inflate(R.layout.short_note, true).also {
             it.short_note_label.text = label
@@ -387,18 +385,22 @@ class CardTypeBuilder(val id: Int) {
     }
 }
 
+const val EXTRA_CARD_TYPE_ID = "ru.spbau.mit.structurednotes.data.CARD_TYPE_ID"
 const val EXTRA_CARD_TYPE = "ru.spbau.mit.structurednotes.data.CardType"
 const val EXTRA_CARD_DATA = "ru.spbau.mit.structurednotes.data.CardsData"
 const val EXTRA_CARDS_DATA = "ru.spbau.mit.structurednotes.data.CARDS_DATA"
 
 @Serializable
-data class CardType(val id: Int, val name: String, val color: Int, val logo: Int, val layout: List<@RawValue CardAttribute>) : Parcelable {
-    override fun equals(other: Any?): Boolean = if (other is CardType) other.name == name else false
+data class CardType(val id: Int, val name: String, val color: Int, val logo: Int, val layout: List<CardAttribute>) {
+    override fun equals(other: Any?): Boolean = if (other is CardType) id == other.id else false
 
     override fun hashCode(): Int {
         return name.hashCode()
     }
 }
 
-@Parcelize
-data class CardData(val data: List<List<String>>) : Parcelable
+@Serializable
+data class NoteData(val data: List<List<String>>)
+
+@Serializable
+data class CardData(val data: MutableList<NoteData>)

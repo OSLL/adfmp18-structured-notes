@@ -8,6 +8,8 @@ apply plugin: 'org.jetbrains.kotlin.android.extensions'
 
 apply plugin: 'kotlinx-serialization'
 
+apply plugin: 'kotlin-kapt'
+
 buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:3.1.0'
@@ -63,10 +65,7 @@ dependencies {
     implementation 'com.android.support:support-v4:26.1.0'
     implementation 'com.android.support:recyclerview-v7:26.1.0'
 
-    implementation "android.arch.persistence.room:runtime:1.0.0"
-    annotationProcessor "android.arch.persistence.room:compiler:1.0.0"
-
-    implementation "org.jetbrains.kotlinx:kotlinx-gradle-serialization-plugin:$serialization_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serialization_version"
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'

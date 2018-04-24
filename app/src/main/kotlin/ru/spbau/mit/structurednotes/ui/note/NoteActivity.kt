@@ -17,6 +17,7 @@ import kotlinx.android.synthetic.main.activity_note.*
 import kotlinx.android.synthetic.main.note_audio.*
 import kotlinx.android.synthetic.main.note_photo.view.*
 import kotlinx.android.synthetic.main.short_note.view.*
+import kotlinx.serialization.json.JSON
 import ru.spbau.mit.structurednotes.R
 import ru.spbau.mit.structurednotes.data.*
 import java.io.File
@@ -34,7 +35,7 @@ class NoteActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_note)
 
-        cardType = intent.getParcelableExtra(EXTRA_CARD_TYPE)
+        cardType = JSON.parse(intent.getStringExtra(EXTRA_CARD_TYPE))
 
         for (attr in cardType.layout) {
             data.add(mutableListOf())
@@ -115,8 +116,8 @@ class NoteActivity : AppCompatActivity() {
         }
 
         val intent = Intent().also {
-            it.putExtra(EXTRA_CARD_TYPE, cardType)
-            it.putExtra(EXTRA_CARD_DATA, CardData(data))
+            it.putExtra(EXTRA_CARD_TYPE, JSON.stringify(cardType))
+            it.putExtra(EXTRA_CARD_DATA, JSON.stringify(NoteData(data)))
         }
 
         setResult(Activity.RESULT_OK, intent)
