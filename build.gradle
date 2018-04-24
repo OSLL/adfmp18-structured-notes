@@ -14,6 +14,7 @@ allprojects {
         ext.serialization_version = '0.4.2'
 
         repositories {
+            google()
             jcenter()
             maven { url "https://kotlin.bintray.com/kotlinx" }
         }
