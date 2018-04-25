@@ -41,7 +41,6 @@ import ru.spbau.mit.structurednotes.ui.list.ListActivity
 import ru.spbau.mit.structurednotes.ui.note.NoteActivity
 import ru.spbau.mit.structurednotes.ui.note.createImageFile
 import ru.spbau.mit.structurednotes.utils.inflate
-import kotlin.reflect.KClass
 
 @Serializable
 abstract class CardAttribute {

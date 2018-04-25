@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
 
         fab.setOnClickListener {
             val intent = Intent(this, ConstructorActivity::class.java).also {
-                it.putExtra(EXTRA_CARD_TYPE_ID, cards.data.map { it.id }.max() ?: 0 + 1)
+                it.putExtra(EXTRA_CARD_TYPE_ID, (cards.data.map { it.id }.max() ?: 0) + 1)
             }
             startActivityForResult(intent, CONSTRUCTOR_CARD_TYPE)
         }
