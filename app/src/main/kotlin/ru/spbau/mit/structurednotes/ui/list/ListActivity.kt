@@ -8,11 +8,9 @@ import android.view.View
 import android.view.ViewGroup
 import com.google.android.gms.maps.MapView
 import kotlinx.android.synthetic.main.activity_list.*
+import kotlinx.serialization.json.JSON
 import ru.spbau.mit.structurednotes.R
-import ru.spbau.mit.structurednotes.data.CardData
-import ru.spbau.mit.structurednotes.data.CardType
-import ru.spbau.mit.structurednotes.data.EXTRA_CARDS_DATA
-import ru.spbau.mit.structurednotes.data.EXTRA_CARD_TYPE
+import ru.spbau.mit.structurednotes.data.*
 import ru.spbau.mit.structurednotes.utils.inflate
 
 class ListActivity : AppCompatActivity() {
@@ -23,8 +21,8 @@ class ListActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        cardType = intent.getParcelableExtra(EXTRA_CARD_TYPE)
-        val notesData: List<CardData> = intent.getParcelableArrayListExtra(EXTRA_CARDS_DATA)
+        cardType = JSON.parse(intent.getStringExtra(EXTRA_CARD_TYPE))
+        val notesData: CardData = JSON.parse(intent.getStringExtra(EXTRA_CARDS_DATA))
 
         setContentView(R.layout.activity_list)
         setSupportActionBar(toolbar)
@@ -32,7 +30,7 @@ class ListActivity : AppCompatActivity() {
         title = cardType.name
 
         notes_list_view.layoutManager = LinearLayoutManager(this)
-        notes_list_view.adapter = RecyclerAdapter(notesData)
+        notes_list_view.adapter = RecyclerAdapter(notesData.data)
     }
 
     override fun onStart() {
@@ -45,7 +43,7 @@ class ListActivity : AppCompatActivity() {
         mapView?.onResume()
     }
 
-    private inner class RecyclerAdapter(val data: List<CardData>): RecyclerView.Adapter<RecyclerHolder>() {
+    private inner class RecyclerAdapter(val data: List<NoteData>): RecyclerView.Adapter<RecyclerHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
                 RecyclerHolder(parent.inflate(R.layout.list_note).also { it.setBackgroundColor(cardType.color); })

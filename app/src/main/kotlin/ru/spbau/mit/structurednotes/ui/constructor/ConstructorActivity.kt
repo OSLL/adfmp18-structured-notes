@@ -14,6 +14,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder
 import kotlinx.android.synthetic.main.activity_constructor.*
+import kotlinx.serialization.json.JSON
 import org.jetbrains.anko.AnkoContext
 import org.jetbrains.anko.gridLayout
 import org.jetbrains.anko.imageButton
@@ -26,14 +27,17 @@ class ConstructorActivity : AppCompatActivity() {
 
     private val logos = listOf(R.drawable.ic_add_audio, R.drawable.ic_add_text, R.drawable.ic_add_photo)
 
-    private val cardTypeBuilder = CardTypeBuilder().apply {
-        color = Color.argb(100, 255, 0, 0)
-        logo = R.drawable.ic_add_text
-    }
+    private lateinit var cardTypeBuilder: CardTypeBuilder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_constructor)
+
+        cardTypeBuilder = CardTypeBuilder(intent.getIntExtra(EXTRA_CARD_TYPE_ID, -1)).apply {
+            color = Color.argb(100, 255, 0, 0)
+            logo = R.drawable.ic_add_text
+        }
+
         colorButton.setBackgroundColor(cardTypeBuilder.color!!)
 
         ItemTouchHelper(object : ItemTouchHelper.Callback() {
@@ -153,14 +157,13 @@ class ConstructorActivity : AppCompatActivity() {
 
         val cardType = cardTypeBuilder.build()
 
-        cardType ?: also {
+        if (cardType == null) {
             Toast.makeText(this@ConstructorActivity, "enter category name", Toast.LENGTH_LONG).show()
             return
         }
 
-        val intent = Intent().also {
-            it.putExtra(EXTRA_CARD_TYPE, cardType)
-        }
+        val intent = Intent()
+        intent.putExtra(EXTRA_CARD_TYPE, JSON.stringify(cardType))
 
         setResult(Activity.RESULT_OK, intent)
 

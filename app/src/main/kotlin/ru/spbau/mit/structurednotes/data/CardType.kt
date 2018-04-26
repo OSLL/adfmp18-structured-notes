@@ -11,7 +11,6 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
-import android.os.Parcelable
 import android.provider.MediaStore
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
@@ -26,8 +25,6 @@ import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
-import kotlinx.android.parcel.Parcelize
-import kotlinx.android.parcel.RawValue
 import kotlinx.android.synthetic.main.constructor_text_conf.view.*
 import kotlinx.android.synthetic.main.list_audio.view.*
 import kotlinx.android.synthetic.main.list_long.view.*
@@ -37,6 +34,7 @@ import kotlinx.android.synthetic.main.map_button.view.*
 import kotlinx.android.synthetic.main.note_audio.view.*
 import kotlinx.android.synthetic.main.note_audio_record.view.*
 import kotlinx.android.synthetic.main.short_note.view.*
+import kotlinx.serialization.*
 import org.jetbrains.anko.*
 import ru.spbau.mit.structurednotes.R
 import ru.spbau.mit.structurednotes.ui.list.ListActivity
@@ -44,15 +42,33 @@ import ru.spbau.mit.structurednotes.ui.note.NoteActivity
 import ru.spbau.mit.structurednotes.ui.note.createImageFile
 import ru.spbau.mit.structurednotes.utils.inflate
 
-
+@Serializable
 abstract class CardAttribute {
     abstract fun injectToConstructor(ctx: Context, itemView: ViewGroup)
     abstract fun injectToNote(noteActivity: NoteActivity, itemView: ViewGroup): View
     abstract fun injectToList(listActivity: ListActivity, noteView: ViewGroup, data: List<String>)
+
+    @Serializer(forClass = CardAttribute::class)
+    companion object : KSerializer<CardAttribute> {
+        override val serialClassDesc: KSerialClassDesc
+            get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+
+        override fun load(input: KInput): CardAttribute {
+            val canonicalName = input.readStringValue()
+            return input.readSerializableValue(serializerByClass(Class.forName(canonicalName).kotlin))
+        }
+
+        override fun save(output: KOutput, obj: CardAttribute) {
+            val canonicalName = obj.javaClass.canonicalName
+            output.writeStringValue(canonicalName)
+            output.writeSerializableValue(serializerByClass(Class.forName(canonicalName).kotlin), obj)
+        }
+
+    }
 }
 
-@Parcelize
-class Photo : CardAttribute(), Parcelable {
+@Serializable
+class Photo : CardAttribute() {
     override fun injectToConstructor(ctx: Context, itemView: ViewGroup) {
         val imageView = ImageView(ctx)
         imageView.setImageResource(R.drawable.ic_add_photo)
@@ -79,8 +95,8 @@ class Photo : CardAttribute(), Parcelable {
     override fun injectToNote(noteActivity: NoteActivity, itemView: ViewGroup) = itemView.inflate(R.layout.note_photo)
 }
 
-@Parcelize
-class Audio: CardAttribute(), Parcelable {
+@Serializable
+class Audio: CardAttribute() {
     override fun injectToConstructor(ctx: Context, itemView: ViewGroup) {
         val imageView = ImageView(ctx)
         imageView.setImageResource(R.drawable.ic_add_audio)
@@ -158,8 +174,8 @@ class Audio: CardAttribute(), Parcelable {
     }
 }
 
-@Parcelize
-class GPS(val auto: Boolean): CardAttribute(), Parcelable {
+@Serializable
+class GPS(val auto: Boolean): CardAttribute() {
     override fun injectToConstructor(ctx: Context, itemView: ViewGroup) {
         val imageView = ImageView(ctx)
         imageView.setImageResource(R.drawable.img_map)
@@ -306,8 +322,8 @@ class GPS(val auto: Boolean): CardAttribute(), Parcelable {
     }
 }
 
-@Parcelize
-class Text(val short:Boolean, val label: String): CardAttribute(), Parcelable {
+@Serializable
+class Text(val short: Boolean, val label: String): CardAttribute() {
     override fun injectToConstructor(ctx: Context, itemView: ViewGroup) {
         itemView.inflate(R.layout.short_note, true).also {
             it.short_note_label.text = label
@@ -351,7 +367,7 @@ class Text(val short:Boolean, val label: String): CardAttribute(), Parcelable {
 }
 
 
-class CardTypeBuilder {
+class CardTypeBuilder(val id: Int) {
     val layout = mutableListOf<CardAttribute>()
 
     var name: String? = null
@@ -383,22 +399,26 @@ class CardTypeBuilder {
             return null
         }
 
-        return CardType(name!!, color!!, logo!!, layout)
+        return CardType(id, name!!, color!!, logo!!, layout)
     }
 }
 
+const val EXTRA_CARD_TYPE_ID = "ru.spbau.mit.structurednotes.data.CARD_TYPE_ID"
 const val EXTRA_CARD_TYPE = "ru.spbau.mit.structurednotes.data.CardType"
 const val EXTRA_CARD_DATA = "ru.spbau.mit.structurednotes.data.CardsData"
 const val EXTRA_CARDS_DATA = "ru.spbau.mit.structurednotes.data.CARDS_DATA"
 
-@Parcelize
-data class CardType(val name: String, val color: Int, val logo: Int, val layout: List<@RawValue CardAttribute>) : Parcelable {
-    override fun equals(other: Any?): Boolean = if (other is CardType) other.name == name else false
+@Serializable
+data class CardType(val id: Int, val name: String, val color: Int, val logo: Int, val layout: List<CardAttribute>) {
+    override fun equals(other: Any?): Boolean = if (other is CardType) id == other.id else false
 
     override fun hashCode(): Int {
         return name.hashCode()
     }
 }
 
-@Parcelize
-data class CardData(val data: List<List<String>>) : Parcelable
+@Serializable
+data class NoteData(val data: List<List<String>>)
+
+@Serializable
+data class CardData(val data: MutableList<NoteData>)
