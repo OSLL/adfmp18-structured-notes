@@ -37,6 +37,7 @@ class IntegrationTest {
 
             onView(withId(R.id.categoryNameEditText))
                     .check(matches(isCompletelyDisplayed()))
+                    .perform(click())
                     .perform(clearText())
                     .perform(typeText("Category $categoryId"))
             onView(withId(R.id.addTextButton))
@@ -46,6 +47,7 @@ class IntegrationTest {
             onView(withId(R.id.labelEditText))
                     .inRoot(isDialog())
                     .check(matches(isCompletelyDisplayed()))
+                    .perform(click())
                     .perform(clearText())
                     .perform(typeText("Text prop $categoryId"))
             onView(withText("ok"))
