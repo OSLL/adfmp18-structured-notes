@@ -1,14 +1,20 @@
 package ru.spbau.mit.structurednotes.ui.note
 
+import android.Manifest
+import android.Manifest.permission.RECORD_AUDIO
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Bitmap
 import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.support.design.widget.Snackbar
+import android.support.v4.app.ActivityCompat
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AppCompatActivity
 import android.view.View
@@ -59,13 +65,32 @@ class NoteActivity : AppCompatActivity() {
         }
     }
 
+    private fun requestPermission(rationale: String, permission: String) {
+        val requestPermission = {
+            ActivityCompat.requestPermissions(this@NoteActivity, arrayOf(permission), 0)
+        }
+
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this@NoteActivity, permission)) {
+            Snackbar.make(inputLayout, "We need permission to record audio", Snackbar.LENGTH_LONG)
+                    .setAction("GRANT") { _ -> requestPermission() }
+                    .show()
+        } else {
+            requestPermission()
+        }
+    }
+
     inner class Recorder {
         private var mediaRecorder: MediaRecorder? = null
         private var uri: String? = null
 
-        fun start() {
+        fun start(): Boolean {
             val file = createAudioFile()
             uri = FileProvider.getUriForFile(baseContext, "com.example.android.fileprovider", file).toString()
+
+            if (ActivityCompat.checkSelfPermission(baseContext, RECORD_AUDIO) != PERMISSION_GRANTED) {
+                requestPermission("You asked to record audio", RECORD_AUDIO)
+                return false
+            }
 
             mediaRecorder = MediaRecorder()
 
@@ -75,6 +100,8 @@ class NoteActivity : AppCompatActivity() {
             mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
             mediaRecorder?.prepare()
             mediaRecorder?.start()
+
+            return true
         }
 
         fun isRecordering(): Boolean {
@@ -99,9 +126,9 @@ class NoteActivity : AppCompatActivity() {
             note_audio_record.setImageResource(R.drawable.ic_add_audio)
             note_audio_records.adapter.notifyItemInserted(audioData().lastIndex)
         } else {
-            recorder.start()
-
-            note_audio_record.setImageResource(R.drawable.abc_ic_star_black_36dp)
+            if (recorder.start()) {
+                note_audio_record.setImageResource(R.drawable.abc_ic_star_black_36dp)
+            }
         }
     }
 
