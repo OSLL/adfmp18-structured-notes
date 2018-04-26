@@ -4,6 +4,7 @@ import android.support.test.InstrumentationRegistry
 import android.support.test.espresso.Espresso.onData
 import android.support.test.espresso.Espresso.onView
 import android.support.test.espresso.action.ViewActions.*
+import android.support.test.espresso.assertion.ViewAssertions.doesNotExist
 import android.support.test.espresso.assertion.ViewAssertions.matches
 import android.support.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import android.support.test.espresso.contrib.RecyclerViewActions.scrollToPosition
@@ -110,11 +111,23 @@ class IntegrationTest {
                 .check(matches(isCompletelyDisplayed()))
                 .perform(click())
 
+        onView(withText("Text prop 2")).check(doesNotExist())
         for (i in 1..NOTES - 1) {
             onView(withId(R.id.notes_list_view))
                     .perform(scrollToPosition<RecyclerView.ViewHolder>(i + 1))
             onView(allOf(withText("d$i"), hasSibling(withText("Text prop 1"))))
                     .check(matches(isDisplayed()))
         }
+        onView(isRoot()).perform(pressBack())
+    }
+
+    @Test
+    fun checkCategory2Empty() {
+        onView(allOf(hasSibling(withText("Category 2")), withId(R.id.list_layout)))
+                .check(matches(isCompletelyDisplayed()))
+                .perform(click())
+        onView(withText("Text prop 1")).check(doesNotExist())
+        onView(withText("Text prop 2")).check(doesNotExist())
+        onView(isRoot()).perform(pressBack())
     }
 }
