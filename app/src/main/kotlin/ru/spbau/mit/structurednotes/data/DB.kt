@@ -9,7 +9,7 @@ data class NoteData(val data: List<List<String>>)
 data class CardData(val data: MutableList<NoteData>)
 
 @Serializable
-data class DB(val data: MutableMap<Int, CardData>)
+data class CardsData(val data: MutableMap<Int, CardData>)
 
 @Serializable
 data class Cards(val data: MutableList<CardType>)

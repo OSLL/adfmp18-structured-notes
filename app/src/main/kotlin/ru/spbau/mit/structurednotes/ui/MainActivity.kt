@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
     private val CONSTRUCTOR_CARD_TYPE = 1
     private val NOTE_TYPE = 2
 
-    private lateinit var db: DB
+    private lateinit var cardsData: CardsData
     private lateinit var cards: Cards
 
     private lateinit var dataFile: File
@@ -48,10 +48,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         dataFile.readText().also {
-            db = if (it.isNotEmpty()) {
+            cardsData = if (it.isNotEmpty()) {
                 JSON.parse(it)
             } else {
-                DB(mutableMapOf())
+                CardsData(mutableMapOf())
             }
         }
 
@@ -140,7 +140,7 @@ class MainActivity : AppCompatActivity() {
                 view.list_layout.setOnClickListener {
                     val intent = Intent(this@MainActivity, ListActivity::class.java).also {
                         it.putExtra(EXTRA_CARD_TYPE, JSON.stringify(cardType))
-                        it.putExtra(EXTRA_CARDS_DATA, JSON.stringify(db.data[cardType.id] ?: CardData(mutableListOf())))
+                        it.putExtra(EXTRA_CARDS_DATA, JSON.stringify(cardsData.data[cardType.id] ?: CardData(mutableListOf())))
                     }
 
                     startActivity(intent)
@@ -170,7 +170,7 @@ class MainActivity : AppCompatActivity() {
                     val cardType = JSON.parse<CardType>(data.getStringExtra(EXTRA_CARD_TYPE))
                     val noteData = JSON.parse<NoteData>(data.getStringExtra(EXTRA_CARD_DATA))
 
-                    db.data.getOrPut(cardType.id, { CardData(mutableListOf()) }).data.add(noteData)
+                    cardsData.data.getOrPut(cardType.id, { CardData(mutableListOf()) }).data.add(noteData)
                 }
                 else -> error("impossible case")
             }
@@ -180,7 +180,7 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
 
-        dataFile.writeText(JSON.stringify(db))
+        dataFile.writeText(JSON.stringify(cardsData))
         cardsFile.writeText(JSON.stringify(cards))
     }
 }
