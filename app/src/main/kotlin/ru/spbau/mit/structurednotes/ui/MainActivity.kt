@@ -13,7 +13,6 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_card.view.*
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
 import ru.spbau.mit.structurednotes.R
 import ru.spbau.mit.structurednotes.data.*
@@ -28,12 +27,6 @@ class MainActivity : AppCompatActivity() {
 
     private val CONSTRUCTOR_CARD_TYPE = 1
     private val NOTE_TYPE = 2
-
-    @Serializable
-    data class DB(val data: MutableMap<Int, CardData>)
-
-    @Serializable
-    data class Cards(val data: MutableList<CardType>)
 
     private lateinit var db: DB
     private lateinit var cards: Cards

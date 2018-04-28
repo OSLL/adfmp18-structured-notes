@@ -416,9 +416,3 @@ data class CardType(val id: Int, val name: String, val color: Int, val logo: Int
         return name.hashCode()
     }
 }
-
-@Serializable
-data class NoteData(val data: List<List<String>>)
-
-@Serializable
-data class CardData(val data: MutableList<NoteData>)
