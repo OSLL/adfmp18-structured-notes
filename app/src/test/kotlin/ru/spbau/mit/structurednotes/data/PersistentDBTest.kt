@@ -37,7 +37,7 @@ class PersistentDBTest {
 
     @Test
     fun testLoadEmpty() {
-        val dataFile = folder.root.resolve("data")
+        val dataFile = folder.root.resolve("attr")
         val cardsFile = folder.root.resolve("cards")
         val db = PersistentDB(dataFile, cardsFile)
         assertEquals(Cards(mutableListOf()), db.cards)
@@ -50,7 +50,7 @@ class PersistentDBTest {
 
     @Test
     fun testCardTypesSaveOverride() {
-        val dataFile = folder.root.resolve("data")
+        val dataFile = folder.root.resolve("attr")
         val cardsFile = folder.root.resolve("cards")
 
         var db = PersistentDB(dataFile, cardsFile)
@@ -73,7 +73,7 @@ class PersistentDBTest {
 
     @Test
     fun testCardsDataSaveOverride() {
-        val dataFile = folder.root.resolve("data")
+        val dataFile = folder.root.resolve("attr")
         val cardsFile = folder.root.resolve("cards")
 
         var db = PersistentDB(dataFile, cardsFile)

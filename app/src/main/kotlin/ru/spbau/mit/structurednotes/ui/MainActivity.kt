@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        db = PersistentDB(filesDir.resolve("data"), filesDir.resolve("cards"))
+        db = PersistentDB(filesDir.resolve("attr"), filesDir.resolve("cards"))
         db.load()
 
         ItemTouchHelper(object : ItemTouchHelper.Callback() {

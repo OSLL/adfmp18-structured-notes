@@ -11,6 +11,7 @@ import kotlinx.android.synthetic.main.activity_list.*
 import kotlinx.serialization.json.JSON
 import ru.spbau.mit.structurednotes.R
 import ru.spbau.mit.structurednotes.data.*
+import ru.spbau.mit.structurednotes.ui.attributes.CardAttributeAction
 import ru.spbau.mit.structurednotes.utils.inflate
 
 class ListActivity : AppCompatActivity() {
@@ -57,9 +58,11 @@ class ListActivity : AppCompatActivity() {
 
     private inner class RecyclerHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bindTo(data: List<List<String>>) {
-            cardType.layout.forEachIndexed { index, attr ->
-                attr.injectToList(this@ListActivity, itemView as ViewGroup, data[index])
-            }
+            cardType.layout
+                    .map { CardAttributeAction.from(it) }
+                    .forEachIndexed { index, attr ->
+                        attr.injectToList(this@ListActivity, itemView as ViewGroup, data[index])
+                    }
         }
     }
 

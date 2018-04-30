@@ -41,7 +41,7 @@ class IntegrationTest {
         @BeforeClass
         @JvmStatic
         fun clearData() {
-            InstrumentationRegistry.getTargetContext().filesDir.resolve("data").delete()
+            InstrumentationRegistry.getTargetContext().filesDir.resolve("attr").delete()
             InstrumentationRegistry.getTargetContext().filesDir.resolve("cards").delete()
         }
     }

@@ -19,7 +19,12 @@ import org.jetbrains.anko.AnkoContext
 import org.jetbrains.anko.gridLayout
 import org.jetbrains.anko.imageButton
 import ru.spbau.mit.structurednotes.R
-import ru.spbau.mit.structurednotes.data.*
+import ru.spbau.mit.structurednotes.data.CardTypeBuilder
+import ru.spbau.mit.structurednotes.data.EXTRA_CARD_TYPE
+import ru.spbau.mit.structurednotes.data.EXTRA_CARD_TYPE_ID
+import ru.spbau.mit.structurednotes.ui.attributes.CardAttributeAction
+import ru.spbau.mit.structurednotes.ui.attributes.gps.GPSAction
+import ru.spbau.mit.structurednotes.ui.attributes.text.TextAction
 import ru.spbau.mit.structurednotes.utils.inflate
 import java.util.*
 
@@ -76,7 +81,7 @@ class ConstructorActivity : AppCompatActivity() {
             override fun onBindViewHolder(holder: ViewHolder, position: Int) {
                 (holder.itemView as ViewGroup).removeAllViews()
                 holder.itemView.setBackgroundColor(cardTypeBuilder.color!!)
-                holder.bindTo(cardTypeBuilder.layout[position])
+                holder.bindTo(CardAttributeAction.from(cardTypeBuilder.layout[position]))
             }
         }
 
@@ -86,7 +91,8 @@ class ConstructorActivity : AppCompatActivity() {
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bindTo(attr: CardAttribute) = attr.injectToConstructor(baseContext, itemView as ViewGroup)
+        fun bindTo(attrAction: CardAttributeAction) =
+                attrAction.injectToConstructor(this@ConstructorActivity, itemView as ViewGroup)
     }
 
     fun onAddPhotoButtonClick(view: View) {
@@ -100,7 +106,7 @@ class ConstructorActivity : AppCompatActivity() {
     }
 
     fun onAddLocationButtonClick(view: View) {
-        GPS.constructorDialog(this) { auto ->
+        GPSAction.constructorDialog(this) { auto ->
             cardTypeBuilder.gps(auto)
             template.adapter.notifyItemInserted(cardTypeBuilder.layout.lastIndex)
         }
@@ -111,7 +117,7 @@ class ConstructorActivity : AppCompatActivity() {
     }
 
     fun onAddTextButtonClick(view: View) {
-        Text.constructorDialog(this) { short, label ->
+        TextAction.constructorDialog(this) { short, label ->
             cardTypeBuilder.text(short, label)
             template.adapter.notifyItemInserted(cardTypeBuilder.layout.lastIndex)
         }

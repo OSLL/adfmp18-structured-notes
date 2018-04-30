@@ -1,11 +1,9 @@
 package ru.spbau.mit.structurednotes.ui.note
 
-import android.Manifest
 import android.Manifest.permission.RECORD_AUDIO
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Bitmap
 import android.media.MediaRecorder
@@ -26,6 +24,7 @@ import kotlinx.android.synthetic.main.short_note.view.*
 import kotlinx.serialization.json.JSON
 import ru.spbau.mit.structurednotes.R
 import ru.spbau.mit.structurednotes.data.*
+import ru.spbau.mit.structurednotes.ui.attributes.CardAttributeAction
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -43,10 +42,12 @@ class NoteActivity : AppCompatActivity() {
 
         cardType = JSON.parse(intent.getStringExtra(EXTRA_CARD_TYPE))
 
-        for (attr in cardType.layout) {
-            data.add(mutableListOf())
-            inputLayout.addView(attr.injectToNote(this, inputLayout).also { it.setBackgroundColor(cardType.color) } )
-        }
+        cardType.layout
+                .map { CardAttributeAction.from(it) }
+                .forEach { attr ->
+                    data.add(mutableListOf())
+                    attr.injectToNote(this, inputLayout)
+                }
 
         setResult(Activity.RESULT_CANCELED, Intent())
     }
